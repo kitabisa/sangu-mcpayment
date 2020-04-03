@@ -13,17 +13,12 @@ import (
 
 // Client ...
 type Client struct {
-	BaseURL    string
-	XSignKey   string
-	LogLevel   int
-	Logger     *log.Logger
-	ReqTimeout time.Duration
+	BaseURLToken string
+	XSignKey     string
+	LogLevel     int
+	Logger       *log.Logger
+	ReqTimeout   time.Duration
 }
-
-var (
-	// PaymentName for prefix logging
-	PaymentName = "[MC Payment]"
-)
 
 // NewClient getting default client
 // 0: No logging
@@ -47,6 +42,9 @@ func (c *Client) newRequest(method string, fullPath string, headers map[string]s
 		}
 		return nil, err
 	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-sign-key", c.XSignKey)
 
 	if headers != nil {
 		for k, vv := range headers {
