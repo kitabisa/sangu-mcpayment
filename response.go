@@ -30,7 +30,7 @@ type StatusDataResp struct {
 type TokenizeDetail struct {
 	Token          string `json:"token"`
 	RegisterID     string `json:"register_id"`
-	MaskedCardNo   string `json:"masked_card_no"`
+	MaskedCardNo   string `json:"masked_card_number"`
 	CardHolderName string `json:"card_holder_name"`
 	CardExpDate    string `json:"card_exp_date"`
 	CardBrand      string `json:"card_brand"`

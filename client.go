@@ -1,6 +1,7 @@
 package mcpayment
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,11 +14,12 @@ import (
 
 // Client ...
 type Client struct {
-	BaseURLToken string
-	XSignKey     string
-	LogLevel     int
-	Logger       *log.Logger
-	ReqTimeout   time.Duration
+	BaseURLToken    string
+	XSignKey        string
+	LogLevel        int
+	IsEnvProduction bool
+	Logger          *log.Logger
+	ReqTimeout      time.Duration
 }
 
 // NewClient getting default client
@@ -51,13 +53,21 @@ func (c *Client) newRequest(method string, fullPath string, headers map[string]s
 			req.Header.Set(k, vv)
 		}
 	}
+	fmt.Printf("%+v", req)
 
 	return req, nil
 }
 
 // executeRequest executing the request, respModel should pass by reference as it will be filled to corresponded struct
 func (c *Client) executeRequest(req *http.Request, respModel interface{}) error {
-	httpClient := &http.Client{Timeout: c.ReqTimeout}
+	httpClient := &http.Client{
+		Timeout: c.ReqTimeout,
+	}
+	if !c.IsEnvProduction {
+		httpClient.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
 
 	if c.LogLevel > 1 {
 		c.Logger.Println(PaymentName, " Request ", req.Method, ": ", req.URL.Host, req.URL.Path)
