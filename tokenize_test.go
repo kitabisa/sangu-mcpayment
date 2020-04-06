@@ -15,14 +15,12 @@ import (
 
 type McPaymentTestSuite struct {
 	suite.Suite
-	tokenGateway    TokenizationGateway
-	newRegisterID   string
-	returnURL       string
-	registeredID    string
-	registeredToken string
+	tokenGateway  TokenizationGateway
+	conf          Configs
+	newRegisterID string
 }
 
-type configs struct {
+type Configs struct {
 	BaseURLToken    string
 	XSignKey        string
 	ReturnURL       string
@@ -30,12 +28,35 @@ type configs struct {
 	RegisteredToken string
 }
 
+// RegTokenCase case struct for register token
 type RegTokenCase struct {
-	SignKey      string
-	BaseURLToken string
-	In           TokenizeRegisterReq
-	Out          TokenizeRegResp
-	Err          error
+	SignKey string
+	In      TokenizeRegisterReq
+	Out     TokenizeRegResp
+	Err     error
+}
+
+// GetDelTokenCase case struct for get and del token
+type GetDelTokenCase struct {
+	SignKey string
+	In      string
+	Out     TokenizeDetail
+	Err     error
+}
+
+// GetConfig get config for test
+func GetConfig() (Configs, error) {
+	theToml, err := ioutil.ReadFile("credential_test.toml")
+	if err != nil {
+		return Configs{}, err
+	}
+
+	var conf Configs
+	if _, err := toml.Decode(string(theToml), &conf); err != nil {
+		return Configs{}, err
+	}
+
+	return conf, nil
 }
 
 func TestMcPaymentTestSuite(t *testing.T) {
@@ -43,14 +64,8 @@ func TestMcPaymentTestSuite(t *testing.T) {
 }
 
 func (mc *McPaymentTestSuite) SetupTest() {
-	theToml, err := ioutil.ReadFile("credential_test.toml")
+	conf, err := GetConfig()
 	if err != nil {
-		mc.T().Log(err)
-		mc.T().FailNow()
-	}
-
-	var conf configs
-	if _, err := toml.Decode(string(theToml), &conf); err != nil {
 		mc.T().Log(err)
 		mc.T().FailNow()
 	}
@@ -63,20 +78,18 @@ func (mc *McPaymentTestSuite) SetupTest() {
 
 	mc.tokenGateway = TokenizationGateway{Client: client}
 	mc.newRegisterID = randstr.String(5)
-	mc.returnURL = conf.ReturnURL
-	mc.registeredID = conf.RegisteredID
-	mc.registeredToken = conf.RegisteredToken
+	mc.conf = conf
 }
 
 func (mc *McPaymentTestSuite) TestRegisterToken() {
 	var RegTokenTestCases = []RegTokenCase{
 		{
 			// OK
-			SignKey: mc.tokenGateway.Client.XSignKey,
+			SignKey: mc.conf.XSignKey,
 			In: TokenizeRegisterReq{
 				CallbackURL: "https://mcpayment.free.beeceptor.com",
 				RegisterID:  mc.newRegisterID,
-				ReturnURL:   "https://google.com",
+				ReturnURL:   mc.conf.ReturnURL,
 			},
 			Err: nil,
 			Out: TokenizeRegResp{
@@ -85,11 +98,11 @@ func (mc *McPaymentTestSuite) TestRegisterToken() {
 		},
 		{
 			// Error Validation
-			SignKey: mc.tokenGateway.Client.XSignKey,
+			SignKey: mc.conf.XSignKey,
 			In: TokenizeRegisterReq{
 				CallbackURL: "not-url-format",
 				RegisterID:  mc.newRegisterID,
-				ReturnURL:   "https://google.com",
+				ReturnURL:   mc.conf.ReturnURL,
 			},
 			Err: ErrInvalidRequest,
 			Out: TokenizeRegResp{},
@@ -100,7 +113,7 @@ func (mc *McPaymentTestSuite) TestRegisterToken() {
 			In: TokenizeRegisterReq{
 				CallbackURL: "https://mcpayment.free.beeceptor.com",
 				RegisterID:  mc.newRegisterID,
-				ReturnURL:   "https://google.com",
+				ReturnURL:   mc.conf.ReturnURL,
 			},
 			Err: nil,
 			Out: TokenizeRegResp{
@@ -131,15 +144,103 @@ func (mc *McPaymentTestSuite) TestRegisterToken() {
 }
 
 func (mc *McPaymentTestSuite) TestGetToken() {
-	resp, err := mc.tokenGateway.Get(mc.registeredID)
-	assert.Equal(mc.T(), nil, err)
-	assert.Equal(mc.T(), false, resp.Error)
-	// TODO: add test case for fail
+	var getTokenTestCases = []GetDelTokenCase{
+		{
+			SignKey: mc.conf.XSignKey,
+			In:      mc.conf.RegisteredID,
+			Err:     nil,
+			Out: TokenizeDetail{
+				TokenizeStatusResp: TokenizeStatusResp{
+					Error: false,
+				},
+			},
+		},
+		{
+			SignKey: mc.conf.XSignKey,
+			In:      randstr.String(20),
+			Err:     nil,
+			Out: TokenizeDetail{
+				TokenizeStatusResp: TokenizeStatusResp{
+					Error: true,
+					Data: TokenizeStatusDataResp{
+						ErrorCode: "NOT_FOUND",
+					},
+				},
+			},
+		},
+		{
+			SignKey: randstr.String(20),
+			In:      mc.conf.RegisteredID,
+			Out: TokenizeDetail{
+				TokenizeStatusResp: TokenizeStatusResp{
+					Error: true,
+					Data: TokenizeStatusDataResp{
+						ErrorCode: "INTERNAL_SERVER_ERROR",
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range getTokenTestCases {
+		mc.tokenGateway.Client.XSignKey = test.SignKey
+		resp, err := mc.tokenGateway.Get(test.In)
+		assert.Equal(mc.T(), test.Err, err)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+
+		if resp.Error {
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+		}
+	}
 }
 
 func (mc *McPaymentTestSuite) TestDeleteToken() {
-	resp, err := mc.tokenGateway.Delete("31a2d102c892eaad241465ce830b301fdf5c9ab5be76b7d20c1a75c122ea4d78")
-	assert.Equal(mc.T(), nil, err)
-	assert.Equal(mc.T(), false, resp.Error)
-	// TODO: add test case for fail
+	var delTokenTestCases = []GetDelTokenCase{
+		{
+			SignKey: randstr.String(20),
+			In:      mc.conf.RegisteredID,
+			Out: TokenizeDetail{
+				TokenizeStatusResp: TokenizeStatusResp{
+					Error: true,
+					Data: TokenizeStatusDataResp{
+						ErrorCode: "INTERNAL_SERVER_ERROR",
+					},
+				},
+			},
+		},
+		{
+			SignKey: mc.conf.XSignKey,
+			In:      randstr.String(20),
+			Err:     nil,
+			Out: TokenizeDetail{
+				TokenizeStatusResp: TokenizeStatusResp{
+					Error: true,
+					Data: TokenizeStatusDataResp{
+						ErrorCode: "NOT_FOUND",
+					},
+				},
+			},
+		},
+		{
+			SignKey: mc.conf.XSignKey,
+			In:      mc.conf.RegisteredToken,
+			Err:     nil,
+			Out: TokenizeDetail{
+				TokenizeStatusResp: TokenizeStatusResp{
+					Error: false,
+				},
+			},
+		},
+	}
+
+	for _, test := range delTokenTestCases {
+		mc.tokenGateway.Client.XSignKey = test.SignKey
+		resp, err := mc.tokenGateway.Delete(test.In)
+		assert.Equal(mc.T(), test.Err, err)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+
+		if resp.Error {
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+		}
+	}
 }

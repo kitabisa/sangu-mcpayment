@@ -15,30 +15,36 @@ type TokenizeRegDataResp struct {
 	ErrorCode   string `json:"error_code"`
 }
 
-// StatusResp response body for error / default response
-type StatusResp struct {
-	Error bool           `json:"error"`
-	Code  int            `json:"code"`
-	Data  StatusDataResp `json:"data"`
+// TokenizeStatusResp response body for error / default response on GET and DEL request
+type TokenizeStatusResp struct {
+	Error   bool                   `json:"error"`
+	Message string                 `json:"message"`
+	Data    TokenizeStatusDataResp `json:"data"`
 }
 
-// StatusDataResp status response inner data
-type StatusDataResp struct {
-	Message   string `json:"message"`
-	ErrorCode string `json:"errorcode"`
+// TokenizeStatusDataResp status response inner data
+type TokenizeStatusDataResp struct {
+	ErrorCode string                     `json:"error_code"`
+	Body      TokenizeStatusDataBodyResp `json:"body"`
+}
+
+// TokenizeStatusDataBodyResp body on status response inner data
+type TokenizeStatusDataBodyResp struct {
+	Token string `json:"token"`
 }
 
 // TokenizeDetail token detail data from get / callback
 type TokenizeDetail struct {
-	Token          string `json:"token"`
-	RegisterID     string `json:"register_id"`
-	MaskedCardNo   string `json:"masked_card_number"`
-	CardHolderName string `json:"card_holder_name"`
-	CardExpDate    string `json:"card_exp_date"`
-	CardBrand      string `json:"card_brand"`
-	Status         string `json:"status"`
-	BankIssuer     string `json:"bank_issuer"`
-	StatusResp
+	Token          string  `json:"token"`
+	RegisterID     string  `json:"register_id"`
+	MaskedCardNo   string  `json:"masked_card_number"`
+	CardHolderName string  `json:"card_holder_name"`
+	CardExpDate    string  `json:"card_exp_date"`
+	CardBrand      string  `json:"card_brand"`
+	Status         string  `json:"status"`
+	BankIssuer     string  `json:"bank_issuer"`
+	Amount         float64 `json:"amount"`
+	TokenizeStatusResp
 }
 
 // RecrResp response body for recurring
@@ -64,7 +70,7 @@ type RecrDetailResp struct {
 	Transactions       RecrTrxResp        `json:"transactions"`
 }
 
-// RecrSchdDetail response body for recurring schedule detail data
+// RecrSchdDetailResp response body for recurring schedule detail data
 type RecrSchdDetailResp struct {
 	Interval     int    `json:"interval"`
 	IntervalUnit string `json:"interval_unit"`
