@@ -32,14 +32,31 @@ type RecrCreateReq struct {
 	Amount             float64          `json:"amount" valid:"required,range(1|999999999999999)"`
 	Token              string           `json:"token" valid:"required,length(1|100)"`
 	CallbackURL        string           `json:"callback_url" valid:"required,url"`
-	Schedule           RecrSchDetailReq `json:"schedule" valid:"required"`
+	Schedule           RecrSchCreateReq `json:"schedule" valid:"required"`
+	MissedChargeAction string           `json:"missed_charge_action,omitempty" valid:"optional,in(ignore|stop)"`
+	TotalRecurrence    int              `json:"total_recurrence,omitempty" valid:"optional,range(1|2147483647)"`
+}
+
+// RecrSchCreateReq body request detail for create recurring schedule
+type RecrSchCreateReq struct {
+	Interval     int    `json:"interval" valid:"range(1|365)"`
+	IntervalUnit string `json:"interval_unit" valid:"in(day|week|month)"`
+	StartTime    string `json:"start_time" valid:"rfc3339"`
+}
+
+// RecrUpdateReq body request for update recurring
+type RecrUpdateReq struct {
+	Name               string           `json:"name" valid:"required,length(1|100)"`
+	Amount             float64          `json:"amount" valid:"required,range(1|999999999999999)"`
+	Token              string           `json:"token" valid:"required,length(1|100)"`
+	CallbackURL        string           `json:"callback_url" valid:"required,url"`
+	Schedule           RecrSchUpdateReq `json:"schedule" valid:"required"`
 	MissedChargeAction string           `json:"missed_charge_action" valid:"-"`
 	TotalRecurrence    int              `json:"total_recurrence" valid:"-"`
 }
 
-// RecrSchDetailReq body request detail for recurring schedule
-type RecrSchDetailReq struct {
+// RecrSchUpdateReq body request detail for update recurring schedule
+type RecrSchUpdateReq struct {
 	Interval     int    `json:"interval" valid:"range(1|365)"`
 	IntervalUnit string `json:"interval_unit" valid:"in(day|week|month)"`
-	StartTime    string `json:"start_time" valid:"rfc3339"`
 }

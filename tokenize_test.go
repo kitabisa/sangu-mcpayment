@@ -1,10 +1,8 @@
 package mcpayment
 
 import (
-	"io/ioutil"
 	"testing"
 
-	"github.com/BurntSushi/toml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"github.com/thanhpk/randstr"
@@ -13,19 +11,11 @@ import (
 // rename credential_test.toml.sample to credential_test.toml first
 // fill the credential needed
 
-type McPaymentTestSuite struct {
+type TokenizeTestSuite struct {
 	suite.Suite
 	tokenGateway  TokenizationGateway
 	conf          Configs
 	newRegisterID string
-}
-
-type Configs struct {
-	BaseURLToken    string
-	XSignKey        string
-	ReturnURL       string
-	RegisteredID    string
-	RegisteredToken string
 }
 
 // RegTokenCase case struct for register token
@@ -44,26 +34,11 @@ type GetDelTokenCase struct {
 	Err     error
 }
 
-// GetConfig get config for test
-func GetConfig() (Configs, error) {
-	theToml, err := ioutil.ReadFile("credential_test.toml")
-	if err != nil {
-		return Configs{}, err
-	}
-
-	var conf Configs
-	if _, err := toml.Decode(string(theToml), &conf); err != nil {
-		return Configs{}, err
-	}
-
-	return conf, nil
+func TestTokenizeTestSuite(t *testing.T) {
+	suite.Run(t, new(TokenizeTestSuite))
 }
 
-func TestMcPaymentTestSuite(t *testing.T) {
-	suite.Run(t, new(McPaymentTestSuite))
-}
-
-func (mc *McPaymentTestSuite) SetupTest() {
+func (mc *TokenizeTestSuite) SetupTest() {
 	conf, err := GetConfig()
 	if err != nil {
 		mc.T().Log(err)
@@ -81,7 +56,7 @@ func (mc *McPaymentTestSuite) SetupTest() {
 	mc.conf = conf
 }
 
-func (mc *McPaymentTestSuite) TestRegisterToken() {
+func (mc *TokenizeTestSuite) TestRegisterToken() {
 	var RegTokenTestCases = []RegTokenCase{
 		{
 			// OK
@@ -143,7 +118,7 @@ func (mc *McPaymentTestSuite) TestRegisterToken() {
 	}
 }
 
-func (mc *McPaymentTestSuite) TestGetToken() {
+func (mc *TokenizeTestSuite) TestGetToken() {
 	var getTokenTestCases = []GetDelTokenCase{
 		{
 			SignKey: mc.conf.XSignKey,
@@ -194,7 +169,7 @@ func (mc *McPaymentTestSuite) TestGetToken() {
 	}
 }
 
-func (mc *McPaymentTestSuite) TestDeleteToken() {
+func (mc *TokenizeTestSuite) TestDeleteToken() {
 	var delTokenTestCases = []GetDelTokenCase{
 		{
 			SignKey: randstr.String(20),

@@ -14,12 +14,13 @@ import (
 
 // Client ...
 type Client struct {
-	BaseURLToken    string
-	XSignKey        string
-	LogLevel        int
-	IsEnvProduction bool
-	Logger          *log.Logger
-	ReqTimeout      time.Duration
+	BaseURLToken     string
+	BaseURLRecurring string
+	XSignKey         string
+	LogLevel         int
+	IsEnvProduction  bool
+	Logger           *log.Logger
+	ReqTimeout       time.Duration
 }
 
 // NewClient getting default client
