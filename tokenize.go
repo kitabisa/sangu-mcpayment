@@ -2,7 +2,6 @@ package mcpayment
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 var (
 	epTokenRegister = "/request_tokenization"
+	epTokenBase     = "/tokenization/%s"
 )
 
 // TokenizationGateway ...
@@ -20,10 +20,10 @@ type TokenizationGateway struct {
 }
 
 // Register register token
-func (g *TokenizationGateway) Register(req TokenizeRegisterReq) (resp TokenizeRegResp, err error) {
+func (g *TokenizationGateway) Register(req *TokenizeRegisterReq) (resp TokenizeRegResp, err error) {
 	_, err = govalidator.ValidateStruct(req)
 	if err != nil {
-		err = errors.New(err.Error())
+		err = fmt.Errorf("%w: %s", ErrInvalidRequest, err.Error())
 		return
 	}
 
@@ -43,7 +43,7 @@ func (g *TokenizationGateway) Register(req TokenizeRegisterReq) (resp TokenizeRe
 
 // Get token
 func (g *TokenizationGateway) Get(registerID string) (resp TokenizeDetail, err error) {
-	fullPath := fmt.Sprintf("%s/%s", g.Client.BaseURLToken, registerID)
+	fullPath := fmt.Sprintf("%s/%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenBase, registerID))
 	fmt.Println(fullPath)
 	err = g.Client.Call(http.MethodGet, fullPath, nil, nil, &resp)
 	return
@@ -51,7 +51,7 @@ func (g *TokenizationGateway) Get(registerID string) (resp TokenizeDetail, err e
 
 // Delete token
 func (g *TokenizationGateway) Delete(token string) (resp TokenizeDetail, err error) {
-	fullPath := fmt.Sprintf("%s/%s", g.Client.BaseURLToken, token)
+	fullPath := fmt.Sprintf("%s/%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenBase, token))
 	fmt.Println(fullPath)
 	err = g.Client.Call(http.MethodDelete, fullPath, nil, nil, &resp)
 	return
