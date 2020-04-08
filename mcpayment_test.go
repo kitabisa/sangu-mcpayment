@@ -7,11 +7,12 @@ import (
 )
 
 type Configs struct {
-	BaseURLToken    string
-	XSignKey        string
-	ReturnURL       string
-	RegisteredID    string
-	RegisteredToken string
+	BaseURLToken     string
+	BaseURLRecurring string
+	XSignKey         string
+	ReturnURL        string
+	RegisteredID     string
+	RegisteredToken  string
 }
 
 // GetConfig get config for test

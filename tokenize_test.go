@@ -1,6 +1,7 @@
 package mcpayment
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,7 @@ type TokenizeTestSuite struct {
 
 // RegTokenCase case struct for register token
 type RegTokenCase struct {
+	Name    string
 	SignKey string
 	In      TokenizeRegisterReq
 	Out     TokenizeRegResp
@@ -28,6 +30,7 @@ type RegTokenCase struct {
 
 // GetDelTokenCase case struct for get and del token
 type GetDelTokenCase struct {
+	Name    string
 	SignKey string
 	In      string
 	Out     TokenizeDetail
@@ -57,9 +60,10 @@ func (mc *TokenizeTestSuite) SetupTest() {
 }
 
 func (mc *TokenizeTestSuite) TestRegisterToken() {
+	testName := "Tokenize_Register:%s"
 	var RegTokenTestCases = []RegTokenCase{
 		{
-			// OK
+			Name:    fmt.Sprintf(testName, "OK"),
 			SignKey: mc.conf.XSignKey,
 			In: TokenizeRegisterReq{
 				CallbackURL: "https://mcpayment.free.beeceptor.com",
@@ -72,7 +76,7 @@ func (mc *TokenizeTestSuite) TestRegisterToken() {
 			},
 		},
 		{
-			// Error Validation
+			Name:    fmt.Sprintf(testName, "Error_Validation"),
 			SignKey: mc.conf.XSignKey,
 			In: TokenizeRegisterReq{
 				CallbackURL: "not-url-format",
@@ -83,7 +87,7 @@ func (mc *TokenizeTestSuite) TestRegisterToken() {
 			Out: TokenizeRegResp{},
 		},
 		{
-			// Error SignKey
+			Name:    fmt.Sprintf(testName, "Error_SignKey"),
 			SignKey: "any-sign-key",
 			In: TokenizeRegisterReq{
 				CallbackURL: "https://mcpayment.free.beeceptor.com",
@@ -106,21 +110,23 @@ func (mc *TokenizeTestSuite) TestRegisterToken() {
 		assert.Equal(mc.T(), test.Out.Error, resp.Error)
 
 		if err == nil {
-			assert.Equal(mc.T(), test.Err, err)
+			assert.Equal(mc.T(), test.Err, err, test.Name)
 		} else {
-			assert.Error(mc.T(), test.Err, err)
+			assert.Error(mc.T(), test.Err, err, test.Name)
 		}
 
 		if resp.Error {
-			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
 
 	}
 }
 
 func (mc *TokenizeTestSuite) TestGetToken() {
+	testName := "Tokenize_Get:%s"
 	var getTokenTestCases = []GetDelTokenCase{
 		{
+			Name:    testName,
 			SignKey: mc.conf.XSignKey,
 			In:      mc.conf.RegisteredID,
 			Err:     nil,
@@ -131,6 +137,7 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 			},
 		},
 		{
+			Name:    testName,
 			SignKey: mc.conf.XSignKey,
 			In:      randstr.String(20),
 			Err:     nil,
@@ -144,6 +151,7 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 			},
 		},
 		{
+			Name:    testName,
 			SignKey: randstr.String(20),
 			In:      mc.conf.RegisteredID,
 			Out: TokenizeDetail{
@@ -160,18 +168,20 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 	for _, test := range getTokenTestCases {
 		mc.tokenGateway.Client.XSignKey = test.SignKey
 		resp, err := mc.tokenGateway.Get(test.In)
-		assert.Equal(mc.T(), test.Err, err)
-		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+		assert.Equal(mc.T(), test.Err, err, test.Name)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error, test.Name)
 
 		if resp.Error {
-			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
 	}
 }
 
 func (mc *TokenizeTestSuite) TestDeleteToken() {
+	testName := "Tokenize_Del:%s"
 	var delTokenTestCases = []GetDelTokenCase{
 		{
+			Name:    testName,
 			SignKey: randstr.String(20),
 			In:      mc.conf.RegisteredID,
 			Out: TokenizeDetail{
@@ -184,6 +194,7 @@ func (mc *TokenizeTestSuite) TestDeleteToken() {
 			},
 		},
 		{
+			Name:    testName,
 			SignKey: mc.conf.XSignKey,
 			In:      randstr.String(20),
 			Err:     nil,
@@ -197,6 +208,7 @@ func (mc *TokenizeTestSuite) TestDeleteToken() {
 			},
 		},
 		{
+			Name:    testName,
 			SignKey: mc.conf.XSignKey,
 			In:      mc.conf.RegisteredToken,
 			Err:     nil,
@@ -211,11 +223,11 @@ func (mc *TokenizeTestSuite) TestDeleteToken() {
 	for _, test := range delTokenTestCases {
 		mc.tokenGateway.Client.XSignKey = test.SignKey
 		resp, err := mc.tokenGateway.Delete(test.In)
-		assert.Equal(mc.T(), test.Err, err)
-		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+		assert.Equal(mc.T(), test.Err, err, test.Name)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error, test.Name)
 
 		if resp.Error {
-			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
 	}
 }

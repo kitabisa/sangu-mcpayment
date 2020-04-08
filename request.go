@@ -9,7 +9,7 @@ type TokenizeRegisterReq struct {
 	TrxDetail   TrxDetail `json:"transaction,omitempty" valid:"-"`
 }
 
-// TransactionDetail body request for transactiond detail
+// TrxDetail body request for transactiond detail
 type TrxDetail struct {
 	Amount float64 `json:"amount" valid:"-"`
 	Desc   string  `json:"description" valid:"-"`
@@ -33,8 +33,8 @@ type RecrCreateReq struct {
 	Token              string           `json:"token" valid:"required,length(1|100)"`
 	CallbackURL        string           `json:"callback_url" valid:"required,url"`
 	Schedule           RecrSchCreateReq `json:"schedule" valid:"required"`
-	MissedChargeAction string           `json:"missed_charge_action,omitempty" valid:"optional,in(ignore|stop)"`
-	TotalRecurrence    int              `json:"total_recurrence,omitempty" valid:"optional,range(1|2147483647)"`
+	MissedChargeAction *string          `json:"missed_charge_action,omitempty" valid:"-,in(ignore|stop)"`
+	TotalRecurrence    *int             `json:"total_recurrence,omitempty" valid:"-,range(1|2147483647)"`
 }
 
 // RecrSchCreateReq body request detail for create recurring schedule
