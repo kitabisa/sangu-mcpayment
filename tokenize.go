@@ -15,43 +15,56 @@ var (
 	epTokenDel      = "/delete/%s"
 )
 
-// TokenizationGateway ...
-type TokenizationGateway struct {
-	Client Client
+// ITokenizationGateway interface for TokenizationGateway
+type ITokenizationGateway interface {
+	Register(req *TokenizeRegisterReq) (resp TokenizeRegResp, err error)
+	Get(registerID string) (resp TokenizeDetail, err error)
+	Delete(token string) (resp TokenizeDetail, err error)
+}
+
+// tokenizationGateway ...
+type tokenizationGateway struct {
+	client Client
+}
+
+func NewTokenizationGateway(client Client) ITokenizationGateway {
+	return &tokenizationGateway{
+		client: client,
+	}
 }
 
 // Register register token
-func (g *TokenizationGateway) Register(req *TokenizeRegisterReq) (resp TokenizeRegResp, err error) {
+func (g *tokenizationGateway) Register(req *TokenizeRegisterReq) (resp TokenizeRegResp, err error) {
 	_, err = govalidator.ValidateStruct(req)
 	if err != nil {
 		err = fmt.Errorf("%w: %s", ErrInvalidRequest, err.Error())
 		return
 	}
 
-	fullPath := fmt.Sprintf("%s%s", g.Client.BaseURLToken, epTokenRegister)
+	fullPath := fmt.Sprintf("%s%s", g.client.BaseURLToken, epTokenRegister)
 
 	reqBodyJSON, err := json.Marshal(req)
 	if err != nil {
-		if g.Client.LogLevel > 0 {
-			g.Client.Logger.Printf(PaymentName, " Marshalling body failed: %s\n", err)
+		if g.client.LogLevel > 0 {
+			g.client.Logger.Printf(PaymentName, " Marshalling body failed: %s\n", err)
 		}
 		return
 	}
 
-	err = g.Client.Call(http.MethodPost, fullPath, nil, strings.NewReader(string(reqBodyJSON)), &resp)
+	err = g.client.Call(http.MethodPost, fullPath, nil, strings.NewReader(string(reqBodyJSON)), &resp)
 	return
 }
 
 // Get token
-func (g *TokenizationGateway) Get(registerID string) (resp TokenizeDetail, err error) {
-	fullPath := fmt.Sprintf("%s%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenGet, registerID))
-	err = g.Client.Call(http.MethodGet, fullPath, nil, nil, &resp)
+func (g *tokenizationGateway) Get(registerID string) (resp TokenizeDetail, err error) {
+	fullPath := fmt.Sprintf("%s%s", g.client.BaseURLToken, fmt.Sprintf(epTokenGet, registerID))
+	err = g.client.Call(http.MethodGet, fullPath, nil, nil, &resp)
 	return
 }
 
 // Delete token
-func (g *TokenizationGateway) Delete(token string) (resp TokenizeDetail, err error) {
-	fullPath := fmt.Sprintf("%s%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenDel, token))
-	err = g.Client.Call(http.MethodDelete, fullPath, nil, nil, &resp)
+func (g *tokenizationGateway) Delete(token string) (resp TokenizeDetail, err error) {
+	fullPath := fmt.Sprintf("%s%s", g.client.BaseURLToken, fmt.Sprintf(epTokenDel, token))
+	err = g.client.Call(http.MethodDelete, fullPath, nil, nil, &resp)
 	return
 }
