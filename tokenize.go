@@ -11,7 +11,8 @@ import (
 
 var (
 	epTokenRegister = "/request_tokenization"
-	epTokenBase     = "/tokenization/%s"
+	epTokenGet      = "/detail/%s"
+	epTokenDel      = "/delete/%s"
 )
 
 // TokenizationGateway ...
@@ -43,16 +44,14 @@ func (g *TokenizationGateway) Register(req *TokenizeRegisterReq) (resp TokenizeR
 
 // Get token
 func (g *TokenizationGateway) Get(registerID string) (resp TokenizeDetail, err error) {
-	fullPath := fmt.Sprintf("%s/%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenBase, registerID))
-	fmt.Println(fullPath)
+	fullPath := fmt.Sprintf("%s%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenGet, registerID))
 	err = g.Client.Call(http.MethodGet, fullPath, nil, nil, &resp)
 	return
 }
 
 // Delete token
 func (g *TokenizationGateway) Delete(token string) (resp TokenizeDetail, err error) {
-	fullPath := fmt.Sprintf("%s/%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenBase, token))
-	fmt.Println(fullPath)
+	fullPath := fmt.Sprintf("%s%s", g.Client.BaseURLToken, fmt.Sprintf(epTokenDel, token))
 	err = g.Client.Call(http.MethodDelete, fullPath, nil, nil, &resp)
 	return
 }

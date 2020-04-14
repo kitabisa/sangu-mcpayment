@@ -107,12 +107,10 @@ func (mc *TokenizeTestSuite) TestRegisterToken() {
 	for _, test := range RegTokenTestCases {
 		mc.tokenGateway.Client.XSignKey = test.SignKey
 		resp, err := mc.tokenGateway.Register(&test.In)
-		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error, test.Name)
 
 		if err == nil {
 			assert.Equal(mc.T(), test.Err, err, test.Name)
-		} else {
-			assert.Error(mc.T(), test.Err, err, test.Name)
 		}
 
 		if resp.Error {
@@ -126,7 +124,7 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 	testName := "Tokenize_Get:%s"
 	var getTokenTestCases = []GetDelTokenCase{
 		{
-			Name:    testName,
+			Name:    fmt.Sprintf(testName, "OK"),
 			SignKey: mc.conf.XSignKey,
 			In:      mc.conf.RegisteredID,
 			Err:     nil,
@@ -137,7 +135,7 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 			},
 		},
 		{
-			Name:    testName,
+			Name:    fmt.Sprintf(testName, ErrCodeNotFound),
 			SignKey: mc.conf.XSignKey,
 			In:      randstr.String(20),
 			Err:     nil,
@@ -145,20 +143,21 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 				TokenizeStatusResp: TokenizeStatusResp{
 					Error: true,
 					Data: TokenizeStatusDataResp{
-						ErrorCode: "NOT_FOUND",
+						ErrorCode: ErrCodeNotFound,
 					},
 				},
 			},
 		},
 		{
-			Name:    testName,
+			Name:    fmt.Sprintf(testName, ErrCode500),
 			SignKey: randstr.String(20),
 			In:      mc.conf.RegisteredID,
+			Err:     nil,
 			Out: TokenizeDetail{
 				TokenizeStatusResp: TokenizeStatusResp{
 					Error: true,
 					Data: TokenizeStatusDataResp{
-						ErrorCode: "INTERNAL_SERVER_ERROR",
+						ErrorCode: ErrCode500,
 					},
 				},
 			},

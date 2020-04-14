@@ -8,6 +8,9 @@ var (
 
 	// ErrInvalidRequest error type for invalid request
 	ErrInvalidRequest = errors.New("Invalid Request")
+
+	// ErrUnauthorize error type for 401
+	ErrUnauthorize = errors.New("Unauthorize")
 )
 
 func isOK(httpStatus int) bool {
