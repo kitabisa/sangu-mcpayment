@@ -10,11 +10,12 @@ import (
 )
 
 var (
-	// EpRecurring endpoint for create recurring
-	EpRecurring = "/subscriptions"
-
-	// EpRecurringID endpoint for get recurring detail
-	EpRecurringID = EpRecurring + "/%s"
+	epCreate  = "/create"
+	epGet     = "/detail/%s"
+	epUpdate  = "/update/%s"
+	epEnable  = epUpdate + "/enable"
+	epDisable = epUpdate + "/disable"
+	epFinish  = epUpdate + "/finish"
 )
 
 // RecurringGateway gateway for recurring
@@ -30,7 +31,7 @@ func (r *RecurringGateway) Create(req *RecrCreateReq) (resp RecrResp, err error)
 		return
 	}
 
-	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, EpRecurring)
+	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, epCreate)
 
 	reqBodyJSON, err := json.Marshal(req)
 	if err != nil {
@@ -46,7 +47,7 @@ func (r *RecurringGateway) Create(req *RecrCreateReq) (resp RecrResp, err error)
 
 // Get call get subscription API
 func (r *RecurringGateway) Get(registerID string) (resp RecrResp, err error) {
-	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(EpRecurringID, registerID))
+	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(epGet, registerID))
 	err = r.Client.Call(http.MethodGet, fullPath, nil, nil, &resp)
 	return
 }
@@ -59,7 +60,7 @@ func (r *RecurringGateway) Update(registerID string, req *RecrUpdateReq) (resp R
 		return
 	}
 
-	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(EpRecurringID, registerID))
+	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(epUpdate, registerID))
 
 	reqBodyJSON, err := json.Marshal(req)
 	if err != nil {
@@ -75,14 +76,21 @@ func (r *RecurringGateway) Update(registerID string, req *RecrUpdateReq) (resp R
 
 // Enable call enable subsciption API
 func (r *RecurringGateway) Enable(registerID string) (resp RecrResp, err error) {
-	fullPath := fmt.Sprintf("%s%s/enable", r.Client.BaseURLRecurring, fmt.Sprintf(EpRecurringID, registerID))
+	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(epEnable, registerID))
 	err = r.Client.Call(http.MethodPost, fullPath, nil, nil, &resp)
 	return
 }
 
 // Disable call enable subsciption API
 func (r *RecurringGateway) Disable(registerID string) (resp RecrResp, err error) {
-	fullPath := fmt.Sprintf("%s%s/disable", r.Client.BaseURLRecurring, fmt.Sprintf(EpRecurringID, registerID))
+	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(epDisable, registerID))
+	err = r.Client.Call(http.MethodPost, fullPath, nil, nil, &resp)
+	return
+}
+
+// Finish call finish subsciption API
+func (r *RecurringGateway) Finish(registerID string) (resp RecrResp, err error) {
+	fullPath := fmt.Sprintf("%s%s", r.Client.BaseURLRecurring, fmt.Sprintf(epFinish, registerID))
 	err = r.Client.Call(http.MethodPost, fullPath, nil, nil, &resp)
 	return
 }

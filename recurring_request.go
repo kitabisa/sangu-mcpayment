@@ -26,7 +26,7 @@ type RecrUpdateReq struct {
 	Token              string           `json:"token" valid:"required,length(1|100)"`
 	CallbackURL        string           `json:"callback_url" valid:"required,url"`
 	Schedule           RecrSchUpdateReq `json:"schedule" valid:"required"`
-	MissedChargeAction string           `json:"missed_charge_action" valid:"-"`
+	MissedChargeAction string           `json:"missed_charge_action" valid:"required,in(ignore|stop)"`
 	TotalRecurrence    int              `json:"total_recurrence" valid:"-"`
 }
 
