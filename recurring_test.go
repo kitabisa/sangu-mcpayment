@@ -12,7 +12,7 @@ import (
 
 type RecurringTestSuite struct {
 	suite.Suite
-	recGateway    RecurringGateway
+	recGateway    IRecurringGateway
 	conf          Configs
 	newRegisterID string
 }
@@ -34,18 +34,17 @@ func (r *RecurringTestSuite) SetupTest() {
 	client.IsEnvProduction = false
 	client.LogLevel = 3
 
-	r.recGateway = RecurringGateway{Client: client}
+	r.recGateway = NewRecurringGateway(client)
 	r.newRegisterID = randstr.String(5)
 	r.conf = conf
 }
 
 // CaseCreateToken struct for test case create
 type CaseCreateToken struct {
-	Name    string
-	SignKey string
-	In      RecrCreateReq
-	Out     RecrResp
-	Err     error
+	Name string
+	In   RecrCreateReq
+	Out  RecrResp
+	Err  error
 }
 
 // CaseUpdateToken struct for test case update
@@ -71,7 +70,6 @@ func (r *RecurringTestSuite) TestCreate() {
 		/* as this test case is not working on staging, but should be applied on prod
 		{
 			Name:    fmt.Sprintf(testName, "fail_starttime_less_than_today"),
-			SignKey: r.conf.XSignKey,
 			In: RecrCreateReq{
 				RegisterID:  randstr.String(20),
 				Name:        randstr.String(20),
@@ -90,8 +88,7 @@ func (r *RecurringTestSuite) TestCreate() {
 			Err: nil,
 		},*/
 		{
-			Name:    fmt.Sprintf(testName, "fail_starttime_format"),
-			SignKey: r.conf.XSignKey,
+			Name: fmt.Sprintf(testName, "fail_starttime_format"),
 			In: RecrCreateReq{
 				RegisterID:  randstr.String(20),
 				Name:        randstr.String(20),
@@ -108,28 +105,7 @@ func (r *RecurringTestSuite) TestCreate() {
 			Err: ErrInvalidRequest,
 		},
 		{
-			Name:    fmt.Sprintf(testName, "fail_signkey"),
-			SignKey: randstr.String(10),
-			In: RecrCreateReq{
-				RegisterID:  randstr.String(20),
-				Name:        randstr.String(20),
-				Amount:      10000,
-				Token:       r.conf.RegisteredToken,
-				CallbackURL: "https://mcpayment.free.beeceptor.com",
-				Schedule: RecrSchCreateReq{
-					Interval:     1,
-					IntervalUnit: "month",
-					StartTime:    time.Now().UTC().Add(5 * time.Second).Format(time.RFC3339),
-				},
-			},
-			Out: RecrResp{
-				Error: true,
-			},
-			Err: nil,
-		},
-		{
-			Name:    fmt.Sprintf(testName, "fail_required"),
-			SignKey: r.conf.XSignKey,
+			Name: fmt.Sprintf(testName, "fail_required"),
 			In: RecrCreateReq{
 				Name:        randstr.String(20),
 				Amount:      10000,
@@ -147,8 +123,7 @@ func (r *RecurringTestSuite) TestCreate() {
 			Err: ErrInvalidRequest,
 		},
 		{
-			Name:    fmt.Sprintf(testName, "success"),
-			SignKey: r.conf.XSignKey,
+			Name: fmt.Sprintf(testName, "success"),
 			In: RecrCreateReq{
 				RegisterID:  randstr.String(20),
 				Name:        randstr.String(20),
@@ -169,7 +144,6 @@ func (r *RecurringTestSuite) TestCreate() {
 	}
 
 	for _, test := range casesCreateToken {
-		r.recGateway.Client.XSignKey = test.SignKey
 		resp, err := r.recGateway.Create(&test.In)
 		assert.Equal(r.T(), test.Out.Error, resp.Error, test.Name)
 
@@ -330,7 +304,6 @@ func (r *RecurringTestSuite) TestDisable() {
 	}
 
 	for _, test := range casesToken {
-		r.recGateway.Client.XSignKey = r.conf.XSignKey
 		resp, err := r.recGateway.Disable(test.In)
 		assert.Equal(r.T(), test.Out.Error, resp.Error, test.Name)
 
@@ -362,7 +335,6 @@ func (r *RecurringTestSuite) TestFinish() {
 	}
 
 	for _, test := range casesToken {
-		r.recGateway.Client.XSignKey = r.conf.XSignKey
 		resp, err := r.recGateway.Finish(test.In)
 		assert.Equal(r.T(), test.Out.Error, resp.Error, test.Name)
 
