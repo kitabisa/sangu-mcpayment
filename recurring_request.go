@@ -35,3 +35,15 @@ type RecrSchUpdateReq struct {
 	Interval     int    `json:"interval" valid:"range(1|365)"`
 	IntervalUnit string `json:"interval_unit" valid:"in(day|week|month)"`
 }
+
+// RecrCallbackReq callback body request
+type RecrCallbackReq struct {
+	ID           string  `json:"id"`
+	RegisterID   string  `json:"register_id"`
+	RecurNo      int     `json:"recur no"`
+	Status       string  `json:"status"`
+	Amount       float64 `json:"amount"`
+	Message      string  `json:"message"`
+	CreatedAt    string  `json:"created at"`
+	SignatureKey string  `json:"signature_key"`
+}

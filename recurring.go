@@ -26,6 +26,7 @@ type IRecurringGateway interface {
 	Enable(registerID string) (resp RecrResp, err error)
 	Disable(registerID string) (resp RecrResp, err error)
 	Finish(registerID string) (resp RecrResp, err error)
+	ValidateSignKey(req RecrCallbackReq) bool
 }
 
 // RecurringGateway gateway for recurring
@@ -110,4 +111,9 @@ func (r *recurringGateway) Finish(registerID string) (resp RecrResp, err error) 
 	fullPath := fmt.Sprintf("%s%s", r.client.BaseURLRecurring, fmt.Sprintf(epFinish, registerID))
 	err = r.client.Call(http.MethodPost, fullPath, nil, nil, &resp)
 	return
+}
+
+// ValidateSignKey validate signature key on callback request
+func (r *recurringGateway) ValidateSignKey(req RecrCallbackReq) bool {
+	return validateSignatureKey(r.client.XSignKey, req.RegisterID, req.SignatureKey)
 }

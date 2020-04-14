@@ -1,6 +1,10 @@
 package mcpayment
 
-import "errors"
+import (
+	"crypto/sha256"
+	"errors"
+	"fmt"
+)
 
 var (
 	// PaymentName for prefix logging
@@ -15,4 +19,11 @@ var (
 
 func isOK(httpStatus int) bool {
 	return httpStatus > 200 && httpStatus < 299
+}
+
+func validateSignatureKey(xSignKey, registerID, SignatureKey string) bool {
+	dataToHash := []byte(fmt.Sprint(xSignKey, registerID))
+	hashToValidate := sha256.Sum256(dataToHash)
+
+	return fmt.Sprintf("%x", hashToValidate) == SignatureKey
 }

@@ -35,6 +35,12 @@ type GetDelTokenCase struct {
 	Err  error
 }
 
+type validateSignCase struct {
+	Name string
+	In   TokenizeCallbackReq
+	Out  bool
+}
+
 func TestTokenizeTestSuite(t *testing.T) {
 	suite.Run(t, new(TokenizeTestSuite))
 }
@@ -174,5 +180,32 @@ func (mc *TokenizeTestSuite) TestDeleteToken() {
 		if resp.Error {
 			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
+	}
+}
+
+func (mc *TokenizeTestSuite) TestValidateSignKey() {
+	testName := "ValidateSignKey:%s"
+	testCases := []validateSignCase{
+		{
+			Name: fmt.Sprintf(testName, "OK"),
+			In: TokenizeCallbackReq{
+				RegisterID:   "IDForUnitTest",
+				SignatureKey: "6ca6c83e6fac83e46e4c9700c0e4b6fd9192f9dbc8048b1a7eb1c6ea2eff7fdd",
+			},
+			Out: true,
+		},
+		{
+			Name: fmt.Sprintf(testName, "Fail"),
+			In: TokenizeCallbackReq{
+				RegisterID:   randstr.String(20),
+				SignatureKey: randstr.String(20),
+			},
+			Out: false,
+		},
+	}
+
+	for _, test := range testCases {
+		realOut := mc.tokenGateway.ValidateSignKey(test.In)
+		assert.Equal(mc.T(), test.Out, realOut, test.Name)
 	}
 }

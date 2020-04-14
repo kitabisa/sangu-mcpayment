@@ -20,6 +20,7 @@ type ITokenizationGateway interface {
 	Register(req *TokenizeRegisterReq) (resp TokenizeRegResp, err error)
 	Get(registerID string) (resp TokenizeDetail, err error)
 	Delete(token string) (resp TokenizeDetail, err error)
+	ValidateSignKey(req TokenizeCallbackReq) bool
 }
 
 // tokenizationGateway ...
@@ -67,4 +68,9 @@ func (g *tokenizationGateway) Delete(token string) (resp TokenizeDetail, err err
 	fullPath := fmt.Sprintf("%s%s", g.client.BaseURLToken, fmt.Sprintf(epTokenDel, token))
 	err = g.client.Call(http.MethodDelete, fullPath, nil, nil, &resp)
 	return
+}
+
+// ValidateSignKey validate signature key on callback request
+func (g *tokenizationGateway) ValidateSignKey(req TokenizeCallbackReq) bool {
+	return validateSignatureKey(g.client.XSignKey, req.RegisterID, req.SignatureKey)
 }

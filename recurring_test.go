@@ -39,16 +39,16 @@ func (r *RecurringTestSuite) SetupTest() {
 	r.conf = conf
 }
 
-// CaseCreateToken struct for test case create
-type CaseCreateToken struct {
+// caseCreateToken struct for test case create
+type caseCreateToken struct {
 	Name string
 	In   RecrCreateReq
 	Out  RecrResp
 	Err  error
 }
 
-// CaseUpdateToken struct for test case update
-type CaseUpdateToken struct {
+// caseUpdateToken struct for test case update
+type caseUpdateToken struct {
 	Name    string
 	In      RecrUpdateReq
 	InRegID string
@@ -56,17 +56,23 @@ type CaseUpdateToken struct {
 	Err     error
 }
 
-// CaseToken struct for other test case
-type CaseToken struct {
+// caseToken struct for other test case
+type caseToken struct {
 	Name string
 	In   string
 	Out  RecrResp
 	Err  error
 }
 
+type caseValidateSign struct {
+	Name string
+	In   RecrCallbackReq
+	Out  bool
+}
+
 func (r *RecurringTestSuite) TestCreate() {
 	testName := "Recurring_Create:%s"
-	var casesCreateToken = []CaseCreateToken{
+	var casesCreateToken = []caseCreateToken{
 		/* as this test case is not working on staging, but should be applied on prod
 		{
 			Name:    fmt.Sprintf(testName, "fail_starttime_less_than_today"),
@@ -155,7 +161,7 @@ func (r *RecurringTestSuite) TestCreate() {
 
 func (r *RecurringTestSuite) TestGet() {
 	nameTest := "Recurring_Get:%s"
-	var casesToken = []CaseToken{
+	var casesToken = []caseToken{
 		{
 			Name: fmt.Sprintf(nameTest, "OK"),
 			In:   r.conf.RegisteredID,
@@ -186,7 +192,7 @@ func (r *RecurringTestSuite) TestGet() {
 
 func (r *RecurringTestSuite) TestUpdate() {
 	testName := "Recurring_Update:%s"
-	var casesUpdateToken = []CaseUpdateToken{
+	var casesUpdateToken = []caseUpdateToken{
 		{
 			Name: fmt.Sprintf(testName, "fail_not_found"),
 			In: RecrUpdateReq{
@@ -253,7 +259,7 @@ func (r *RecurringTestSuite) TestUpdate() {
 
 func (r *RecurringTestSuite) TestEnable() {
 	nameTest := "Recurring_Enable:%s"
-	var casesToken = []CaseToken{
+	var casesToken = []caseToken{
 		{
 			Name: fmt.Sprintf(nameTest, "OK"),
 			In:   r.conf.RegisteredID,
@@ -284,7 +290,7 @@ func (r *RecurringTestSuite) TestEnable() {
 
 func (r *RecurringTestSuite) TestDisable() {
 	nameTest := "Recurring_Disable:%s"
-	var casesToken = []CaseToken{
+	var casesToken = []caseToken{
 		{
 			Name: fmt.Sprintf(nameTest, "OK"),
 			In:   r.conf.RegisteredID,
@@ -315,7 +321,7 @@ func (r *RecurringTestSuite) TestDisable() {
 
 func (r *RecurringTestSuite) TestFinish() {
 	nameTest := "Recurring_Finish:%s"
-	var casesToken = []CaseToken{
+	var casesToken = []caseToken{
 		{
 			Name: fmt.Sprintf(nameTest, "OK"),
 			In:   r.conf.RegisteredID,
@@ -341,5 +347,32 @@ func (r *RecurringTestSuite) TestFinish() {
 		if err == nil {
 			assert.Equal(r.T(), test.Err, err, test.Name)
 		}
+	}
+}
+
+func (r *RecurringTestSuite) TestValidateSignKey() {
+	testName := "ValidateSignKey:%s"
+	testCases := []caseValidateSign{
+		{
+			Name: fmt.Sprintf(testName, "OK"),
+			In: RecrCallbackReq{
+				RegisterID:   "IDForUnitTest",
+				SignatureKey: "6ca6c83e6fac83e46e4c9700c0e4b6fd9192f9dbc8048b1a7eb1c6ea2eff7fdd",
+			},
+			Out: true,
+		},
+		{
+			Name: fmt.Sprintf(testName, "Fail"),
+			In: RecrCallbackReq{
+				RegisterID:   randstr.String(20),
+				SignatureKey: randstr.String(20),
+			},
+			Out: false,
+		},
+	}
+
+	for _, test := range testCases {
+		realOut := r.recGateway.ValidateSignKey(test.In)
+		assert.Equal(r.T(), test.Out, realOut, test.Name)
 	}
 }
