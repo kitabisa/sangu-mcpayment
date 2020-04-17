@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -81,6 +82,7 @@ func (c *Client) executeRequest(req *http.Request, respModel interface{}) error 
 		}
 		return err
 	}
+	defer res.Body.Close()
 
 	resBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -94,8 +96,9 @@ func (c *Client) executeRequest(req *http.Request, respModel interface{}) error 
 		c.Logger.Println(PaymentName, " Response: ", string(resBody))
 	}
 
-	if isOK(200) {
-		return fmt.Errorf("HTTP Status: %d", res.StatusCode)
+	// why? total different struct response on recurring
+	if res.StatusCode == http.StatusUnauthorized && strings.Contains(fmt.Sprintf("%s%s", req.URL.Host, req.URL.Path), "recurring") {
+		return fmt.Errorf("%w: HTTP Status %d\nResp Body: %s", ErrUnauthorize, res.StatusCode, string(resBody))
 	}
 
 	if err = json.Unmarshal(resBody, respModel); err != nil {

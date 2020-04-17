@@ -1,6 +1,7 @@
 package mcpayment
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,25 +14,31 @@ import (
 
 type TokenizeTestSuite struct {
 	suite.Suite
-	tokenGateway  TokenizationGateway
+	tokenGateway  ITokenizationGateway
 	conf          Configs
 	newRegisterID string
 }
 
 // RegTokenCase case struct for register token
 type RegTokenCase struct {
-	SignKey string
-	In      TokenizeRegisterReq
-	Out     TokenizeRegResp
-	Err     error
+	Name string
+	In   TokenizeRegisterReq
+	Out  TokenizeRegResp
+	Err  error
 }
 
 // GetDelTokenCase case struct for get and del token
 type GetDelTokenCase struct {
-	SignKey string
-	In      string
-	Out     TokenizeDetail
-	Err     error
+	Name string
+	In   string
+	Out  TokenizeDetail
+	Err  error
+}
+
+type validateSignCase struct {
+	Name string
+	In   TokenizeCallbackReq
+	Out  bool
 }
 
 func TestTokenizeTestSuite(t *testing.T) {
@@ -51,16 +58,16 @@ func (mc *TokenizeTestSuite) SetupTest() {
 	client.IsEnvProduction = false
 	client.LogLevel = 3
 
-	mc.tokenGateway = TokenizationGateway{Client: client}
+	mc.tokenGateway = NewTokenizationGateway(client)
 	mc.newRegisterID = randstr.String(5)
 	mc.conf = conf
 }
 
 func (mc *TokenizeTestSuite) TestRegisterToken() {
+	testName := "Tokenize_Register:%s"
 	var RegTokenTestCases = []RegTokenCase{
 		{
-			// OK
-			SignKey: mc.conf.XSignKey,
+			Name: fmt.Sprintf(testName, "OK"),
 			In: TokenizeRegisterReq{
 				CallbackURL: "https://mcpayment.free.beeceptor.com",
 				RegisterID:  mc.newRegisterID,
@@ -72,8 +79,7 @@ func (mc *TokenizeTestSuite) TestRegisterToken() {
 			},
 		},
 		{
-			// Error Validation
-			SignKey: mc.conf.XSignKey,
+			Name: fmt.Sprintf(testName, "Error_Validation"),
 			In: TokenizeRegisterReq{
 				CallbackURL: "not-url-format",
 				RegisterID:  mc.newRegisterID,
@@ -82,48 +88,30 @@ func (mc *TokenizeTestSuite) TestRegisterToken() {
 			Err: ErrInvalidRequest,
 			Out: TokenizeRegResp{},
 		},
-		{
-			// Error SignKey
-			SignKey: "any-sign-key",
-			In: TokenizeRegisterReq{
-				CallbackURL: "https://mcpayment.free.beeceptor.com",
-				RegisterID:  mc.newRegisterID,
-				ReturnURL:   mc.conf.ReturnURL,
-			},
-			Err: nil,
-			Out: TokenizeRegResp{
-				Error: true,
-				Data: TokenizeRegDataResp{
-					ErrorCode: "INTERNAL_SERVER_ERROR",
-				},
-			},
-		},
 	}
 
 	for _, test := range RegTokenTestCases {
-		mc.tokenGateway.Client.XSignKey = test.SignKey
 		resp, err := mc.tokenGateway.Register(&test.In)
-		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error, test.Name)
 
 		if err == nil {
-			assert.Equal(mc.T(), test.Err, err)
-		} else {
-			assert.Error(mc.T(), test.Err, err)
+			assert.Equal(mc.T(), test.Err, err, test.Name)
 		}
 
 		if resp.Error {
-			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
 
 	}
 }
 
 func (mc *TokenizeTestSuite) TestGetToken() {
+	testName := "Tokenize_Get:%s"
 	var getTokenTestCases = []GetDelTokenCase{
 		{
-			SignKey: mc.conf.XSignKey,
-			In:      mc.conf.RegisteredID,
-			Err:     nil,
+			Name: fmt.Sprintf(testName, "OK"),
+			In:   mc.conf.RegisteredID,
+			Err:  nil,
 			Out: TokenizeDetail{
 				TokenizeStatusResp: TokenizeStatusResp{
 					Error: false,
@@ -131,26 +119,14 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 			},
 		},
 		{
-			SignKey: mc.conf.XSignKey,
-			In:      randstr.String(20),
-			Err:     nil,
+			Name: fmt.Sprintf(testName, ErrCodeNotFound),
+			In:   randstr.String(20),
+			Err:  nil,
 			Out: TokenizeDetail{
 				TokenizeStatusResp: TokenizeStatusResp{
 					Error: true,
 					Data: TokenizeStatusDataResp{
-						ErrorCode: "NOT_FOUND",
-					},
-				},
-			},
-		},
-		{
-			SignKey: randstr.String(20),
-			In:      mc.conf.RegisteredID,
-			Out: TokenizeDetail{
-				TokenizeStatusResp: TokenizeStatusResp{
-					Error: true,
-					Data: TokenizeStatusDataResp{
-						ErrorCode: "INTERNAL_SERVER_ERROR",
+						ErrorCode: ErrCodeNotFound,
 					},
 				},
 			},
@@ -158,48 +134,36 @@ func (mc *TokenizeTestSuite) TestGetToken() {
 	}
 
 	for _, test := range getTokenTestCases {
-		mc.tokenGateway.Client.XSignKey = test.SignKey
 		resp, err := mc.tokenGateway.Get(test.In)
-		assert.Equal(mc.T(), test.Err, err)
-		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+		assert.Equal(mc.T(), test.Err, err, test.Name)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error, test.Name)
 
 		if resp.Error {
-			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
 	}
 }
 
 func (mc *TokenizeTestSuite) TestDeleteToken() {
+	testName := "Tokenize_Del:%s"
 	var delTokenTestCases = []GetDelTokenCase{
 		{
-			SignKey: randstr.String(20),
-			In:      mc.conf.RegisteredID,
+			Name: fmt.Sprintf(testName, ErrCodeNotFound),
+			In:   randstr.String(20),
+			Err:  nil,
 			Out: TokenizeDetail{
 				TokenizeStatusResp: TokenizeStatusResp{
 					Error: true,
 					Data: TokenizeStatusDataResp{
-						ErrorCode: "INTERNAL_SERVER_ERROR",
+						ErrorCode: ErrCodeNotFound,
 					},
 				},
 			},
 		},
 		{
-			SignKey: mc.conf.XSignKey,
-			In:      randstr.String(20),
-			Err:     nil,
-			Out: TokenizeDetail{
-				TokenizeStatusResp: TokenizeStatusResp{
-					Error: true,
-					Data: TokenizeStatusDataResp{
-						ErrorCode: "NOT_FOUND",
-					},
-				},
-			},
-		},
-		{
-			SignKey: mc.conf.XSignKey,
-			In:      mc.conf.RegisteredToken,
-			Err:     nil,
+			Name: fmt.Sprintf(testName, "OK"),
+			In:   mc.conf.RegisteredToken,
+			Err:  nil,
 			Out: TokenizeDetail{
 				TokenizeStatusResp: TokenizeStatusResp{
 					Error: false,
@@ -209,13 +173,39 @@ func (mc *TokenizeTestSuite) TestDeleteToken() {
 	}
 
 	for _, test := range delTokenTestCases {
-		mc.tokenGateway.Client.XSignKey = test.SignKey
 		resp, err := mc.tokenGateway.Delete(test.In)
-		assert.Equal(mc.T(), test.Err, err)
-		assert.Equal(mc.T(), test.Out.Error, resp.Error)
+		assert.Equal(mc.T(), test.Err, err, test.Name)
+		assert.Equal(mc.T(), test.Out.Error, resp.Error, test.Name)
 
 		if resp.Error {
-			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode)
+			assert.Equal(mc.T(), test.Out.Data.ErrorCode, resp.Data.ErrorCode, test.Name)
 		}
+	}
+}
+
+func (mc *TokenizeTestSuite) TestValidateSignKey() {
+	testName := "ValidateSignKey:%s"
+	testCases := []validateSignCase{
+		{
+			Name: fmt.Sprintf(testName, "OK"),
+			In: TokenizeCallbackReq{
+				RegisterID:   "IDForUnitTest",
+				SignatureKey: "6ca6c83e6fac83e46e4c9700c0e4b6fd9192f9dbc8048b1a7eb1c6ea2eff7fdd",
+			},
+			Out: true,
+		},
+		{
+			Name: fmt.Sprintf(testName, "Fail"),
+			In: TokenizeCallbackReq{
+				RegisterID:   randstr.String(20),
+				SignatureKey: randstr.String(20),
+			},
+			Out: false,
+		},
+	}
+
+	for _, test := range testCases {
+		realOut := mc.tokenGateway.ValidateSignKey(test.In)
+		assert.Equal(mc.T(), test.Out, realOut, test.Name)
 	}
 }
