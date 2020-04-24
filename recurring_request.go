@@ -1,5 +1,9 @@
 package mcpayment
 
+import (
+	"gopkg.in/guregu/null.v3"
+)
+
 // RecrCreateReq body request for create recurring
 type RecrCreateReq struct {
 	RegisterID         string           `json:"register_id" valid:"required,length(1|100)"`
@@ -38,12 +42,12 @@ type RecrSchUpdateReq struct {
 
 // RecrCallbackReq callback body request
 type RecrCallbackReq struct {
-	ID           string  `json:"id"`
-	RegisterID   string  `json:"register_id"`
-	RecurNo      int     `json:"recur no"`
-	Status       string  `json:"status"`
-	Amount       float64 `json:"amount"`
-	Message      string  `json:"message"`
-	CreatedAt    string  `json:"created at"`
-	SignatureKey string  `json:"signature_key"`
+	ID           string      `json:"id"`
+	RegisterID   string      `json:"register_id"`
+	RecurNo      int         `json:"recur_no"`
+	Status       string      `json:"status"`
+	Amount       float64     `json:"amount"`
+	Message      null.String `json:"message"`
+	CreatedAt    string      `json:"created at"`
+	SignatureKey string      `json:"signature_key"`
 }

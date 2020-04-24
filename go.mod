@@ -7,4 +7,5 @@ require (
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
 	github.com/stretchr/testify v1.5.1
 	github.com/thanhpk/randstr v1.0.4
+	gopkg.in/guregu/null.v3 v3.4.0
 )
