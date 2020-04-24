@@ -21,6 +21,7 @@ type RecrDetailResp struct {
 	MissedChargeAction string             `json:"missed_charge_action"`
 	TotalRecurrence    int                `json:"total_recurrence"`
 	Transactions       RecrTrxResp        `json:"transactions"`
+	Message            string             `json:"message"`
 }
 
 // RecrSchdDetailResp response body for recurring schedule detail data
@@ -36,7 +37,7 @@ type RecrSchdDetailResp struct {
 type RecrTrxResp struct {
 	ID        string  `json:"id"`
 	Amount    float64 `json:"amount"`
-	RecurNo   int     `json:"recur no"`
+	RecurNo   int     `json:"recur_no"`
 	Status    string  `json:"status"`
-	ChargedAt string  `json:"charged at"`
+	ChargedAt string  `json:"charged_at"`
 }
