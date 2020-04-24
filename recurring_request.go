@@ -48,6 +48,6 @@ type RecrCallbackReq struct {
 	Status       string      `json:"status"`
 	Amount       float64     `json:"amount"`
 	Message      null.String `json:"message"`
-	CreatedAt    string      `json:"created at"`
+	CreatedAt    string      `json:"created_at"`
 	SignatureKey string      `json:"signature_key"`
 }
