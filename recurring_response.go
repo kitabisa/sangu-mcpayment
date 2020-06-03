@@ -20,7 +20,7 @@ type RecrDetailResp struct {
 	Schedule           RecrSchdDetailResp `json:"schedule"`
 	MissedChargeAction string             `json:"missed_charge_action"`
 	TotalRecurrence    int                `json:"total_recurrence"`
-	Transactions       RecrTrxResp        `json:"transactions"`
+	Transactions       []RecrTrxResp      `json:"transactions"`
 	Message            string             `json:"message"`
 }
 
