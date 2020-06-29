@@ -9,7 +9,7 @@ type RecrCreateReq struct {
 	RegisterID         string           `json:"register_id" valid:"required,length(1|100)"`
 	Name               string           `json:"name" valid:"required,length(1|100)"`
 	Amount             float64          `json:"amount" valid:"required,range(1|999999999999999)"`
-	Token              string           `json:"token" valid:"required,length(1|100)"`
+	Token              string           `json:"token" valid:"required,length(1|500)"`
 	CallbackURL        string           `json:"callback_url" valid:"required,url"`
 	Schedule           RecrSchCreateReq `json:"schedule" valid:"required"`
 	MissedChargeAction *string          `json:"missed_charge_action,omitempty" valid:"-,in(ignore|stop)"`
@@ -27,11 +27,11 @@ type RecrSchCreateReq struct {
 type RecrUpdateReq struct {
 	Name               string           `json:"name" valid:"required,length(1|100)"`
 	Amount             float64          `json:"amount" valid:"required,range(1|999999999999999)"`
-	Token              string           `json:"token" valid:"required,length(1|100)"`
+	Token              string           `json:"token" valid:"required,length(1|500)"`
 	CallbackURL        string           `json:"callback_url" valid:"required,url"`
 	Schedule           RecrSchUpdateReq `json:"schedule" valid:"required"`
-	MissedChargeAction string           `json:"missed_charge_action" valid:"required,in(ignore|stop)"`
-	TotalRecurrence    int              `json:"total_recurrence" valid:"-"`
+	MissedChargeAction *string          `json:"missed_charge_action" valid:"-,in(ignore|stop)"`
+	TotalRecurrence    *int             `json:"total_recurrence" valid:"-"`
 }
 
 // RecrSchUpdateReq body request detail for update recurring schedule

@@ -5,7 +5,7 @@ type TokenizeRegisterReq struct {
 	RegisterID  string    `json:"register_id" valid:"required,length(1|100)"`
 	CallbackURL string    `json:"callback_url" valid:"required,url"`
 	ReturnURL   string    `json:"return_url" valid:"required,url"`
-	IsTrx       bool      `json:"is_transaction,omitempty" valid:"required"`
+	IsTrx       bool      `json:"is_transaction,omitempty" valid:"-"`
 	TrxDetail   TrxDetail `json:"transaction,omitempty" valid:"-"`
 }
 
