@@ -115,5 +115,5 @@ func (r *recurringGateway) Finish(registerID string) (resp RecrResp, err error) 
 
 // ValidateSignKey validate signature key on callback request
 func (r *recurringGateway) ValidateSignKey(req RecrCallbackReq) bool {
-	return validateSignatureKey(r.client.XSignKey, req.RegisterID, req.SignatureKey)
+	return validateSignatureKeyRecurringTransaction(r.client.XSignKey, req.RegisterID, req.SignatureKey, req.Amount)
 }

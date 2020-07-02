@@ -27,3 +27,10 @@ func validateSignatureKey(xSignKey, registerID, SignatureKey string) bool {
 
 	return fmt.Sprintf("%x", hashToValidate) == SignatureKey
 }
+
+func validateSignatureKeyRecurringTransaction(xSignKey, registerID, SignatureKey string, amount float64) bool {
+	dataToHash := []byte(fmt.Sprint(xSignKey, registerID, amount))
+	hashToValidate := sha256.Sum256(dataToHash)
+
+	return fmt.Sprintf("%x", hashToValidate) == SignatureKey
+}
